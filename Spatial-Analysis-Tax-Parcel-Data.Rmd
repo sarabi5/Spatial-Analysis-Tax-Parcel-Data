@@ -1,0 +1,330 @@
+---
+output:
+  html_document:
+    df_print: paged
+    theme: cerulean
+    highlight: haddock
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE, 
+                      fig.width = 10, 
+                      fig.height = 6)
+
+```
+
+<br>
+
+# Data
+
+View the dataset documentation here: [Syracuse, NY Tax Parcel Data](https://watts-college.github.io/cpp-526-fall-2022/labs/syr_parcels.html).
+
+<br>
+
+```{r}
+
+library(sp)
+library(rgdal)
+library(geojsonio)                            # Load required libraries
+
+```
+
+<br>
+
+## Import Spatial Polygons
+
+<br>
+
+```{r cache = TRUE}
+
+url <- paste0("https://raw.githubusercontent.com/DS4PS/Data",
+              "-Science-Class/master/DATA/downtown-syr.geojson")
+
+downtown <- geojson_read(url, what = "sp")    # Load parcel data
+
+plot(downtown,  
+     border = "gray60",
+     col = "gray80")                          # Visualize parcels
+
+```
+
+<br>
+<br>
+
+# Example Solutions
+
+### Example: Tax Parcel Acres
+
+Parcels with more than one acre
+
+<br>
+
+```{r}
+
+result <- downtown$acres > 1                  # Each value in 'acres' is tested
+
+```
+
+<br>
+
+```{r}
+
+group.colors <- ifelse(test = result,         # 'test =' accepts TRUE or FALSE values
+                       yes = "firebrick",     # 'yes =' converts values that are TRUE
+                       no = "gray80")         # 'no =' converts values that are FALSE
+
+```
+
+<br>
+
+```{r}
+
+plot(downtown,                                # Plots object 'downtown'
+     border = NA,
+     col = group.colors)                      # Red when TRUE; gray when FALSE
+
+```
+
+<br>
+<br>
+
+### Example: Parcels with Single Families
+<br>
+
+```{r}
+
+unique(downtown$landuse)                      # All unique values in 'landuse'
+
+```
+
+<br>
+
+```{r}
+
+result <- downtown$landuse == "Single Family" # Test if 'landuse' is "Single Family"
+
+group.colors <- ifelse(test = result,         # Provide TRUE or FALSE test results
+                       yes = "firebrick",     # If TRUE, make "firebrick"
+                       no = "gray80")         # If FALSE, make "gray80"
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)                      # Plot with respective colors
+
+```
+
+<br>
+
+# Questions & Solutions
+
+## Question 1: Vacant Lots
+
+<br>
+
+```{r}
+
+unique(downtown$landuse)                      # Print unique values in 'landuse'
+
+```
+
+<br>
+
+```{r}
+
+result <- downtown$landuse == "Vacant Land"
+
+group.colors <- ifelse(test = result, 
+                       yes = "firebrick", 
+                       no = "gray80")
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)
+
+```
+
+<br>
+<br>
+
+## Question 2: Parking Lots
+
+<br>
+
+```{r}
+
+# Use function: 'sum()'
+# Use variable: 'landuse'
+
+# Assign test (logical) output to object 'result' by replacing 'FALSE'
+
+
+result <- downtown$landuse == "Parking" 
+parking_lots <- sum(result, na.rm=T)
+cat("The number of parking lots is ", parking_lots)
+group.colors <- ifelse(test = result, 
+                       yes = "firebrick", 
+                       no = "gray80")
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)
+
+```
+
+<br>
+<br>
+
+## Question 3: New Construction
+
+<br>
+
+```{r}
+
+# Use variable: 'yearbuilt'
+# Find the number of buildings constructed either after or during and after than 1980
+
+# Assign test (logical) output to object 'result' by replacing 'FALSE'
+result <- downtown$yearbuilt >= 1980 
+num_buildings <- sum(result, na.rm=T)
+cat("The number of buildings constructed after 1980 is ", num_buildings)
+
+group.colors <- ifelse(test = result, 
+                       yes = "firebrick", 
+                       no = "gray80")
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)
+
+```
+
+<br>
+
+```{r}
+
+# Use variable: 'landuse'
+# Use variable: 'yearbuilt'
+# Count only commercial properties with buildings constructed during or later than 1980
+commercial_after1980 <- downtown$landuse=="Commercial" & downtown$yearbuilt >= 1980
+x <- sum(commercial_after1980, na.rm=T ) / length(commercial_after1980)
+
+cat("The proportion of commercial properties built since 1980 is ", x , "%.\n")
+
+```
+
+<br>
+<br>
+
+## Question 4: Parcels Valued Over $10M
+
+<br>
+
+```{r}
+
+# Use function: 'sum()'
+# Use variable: 'assessedval'
+
+# Assign test (logical) output to object 'result' by replacing 'FALSE'
+result <- downtown$assessedval > 10000000 
+val_10m <- sum(result, na.rm=T)
+cat(val_10m, "parcels have assessed values over $10 M.")
+group.colors <- ifelse(test = result, 
+                       yes = "firebrick", 
+                       no = "gray80")
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)
+
+```
+
+<br>
+
+## Question 5: Total Tax Delinquent Parcels
+
+<br>
+
+```{r}
+
+# Use function: 'sum()'
+# Use variable: 'amtdelinqt'
+
+# Assign test (logical) output to object 'result' by replacing 'FALSE'
+
+result <- downtown$amtdelinqt > 0
+delinquent <- sum(result, na.rm=T)
+cat(delinquent, "properties are delinquent on taxes.")
+
+group.colors <- ifelse(test = result, 
+                       yes = "firebrick", 
+                       no = "gray80")
+
+plot(downtown,
+     border = NA, 
+     col = group.colors)
+
+```
+
+<br>
+<br>
+
+## Question 6: Tax Delinquent Parcels
+<br>
+
+```{r}
+
+# Use function: 'mean()'
+# Use variable: 'amtdelinqt'
+
+result <- downtown$amtdelinqt > 0
+delinquent_p <- mean(result, na.rm=T)
+cat(delinquent_p, "% of parcels have delinquent tax payments owed.")
+
+```
+<br>
+
+## Question 7: Tax Delinquent Commercial Properties
+
+**Answer I:** **[X]%** of commercial properties are delinquent on taxes. 
+
+**Answer II:** **[X]%** of delinquent tax dollars are owed by commercial parcels.
+
+<br>
+
+```{r}
+
+# Use function: 'mean()'
+# Use variable: 'amtdelinqt'
+# Use variable: 'landuse'
+
+commercial_properties <- downtown$landuse == "Commercial" &  downtown$amtdelinqt > 0
+proportion_delinquent <- mean(commercial_properties, na.rm = TRUE)
+
+cat(proportion_delinquent, "% of commercial properties are delinquent on taxes.")
+
+# The first answer is tax-delinquent commercial properties over all commercial properties
+# The second answer is the tax dollars owed by commercial properties (a subset) over all tax dollars owed
+
+```
+<br>
+
+## Question 8: Tax Delinquent Parcels by Land Use
+<br>
+
+```{r}
+
+# Use function: 'table()'
+# Use variable: 'amtdelinqt'
+# Use variable: 'landuse'
+
+delinquent_properties <- downtown[downtown$amtdelinqt > 0, ]
+delinquent_by_landuse <- table(delinquent_properties$landuse)
+print(delinquent_by_landuse)
+```
+
+
